@@ -1,12 +1,16 @@
 package br.com.robson.app;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
 
+import br.com.robson.app.model.ClienteRequest;
 import br.com.robson.app.model.ClienteResponse;
+import br.com.robson.app.model.SexoEnum;
 import br.com.robson.app.util.MyServiceClient;
 import br.com.robson.app.util.MyServiceClientFallback;
 import feign.jackson.JacksonDecoder;
+import feign.jackson.JacksonEncoder;
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadRegistry;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
@@ -16,6 +20,7 @@ import io.github.resilience4j.feign.Resilience4jFeign;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
 import io.github.resilience4j.retry.Retry;
+import io.github.resilience4j.retry.RetryConfig;
 import io.github.resilience4j.retry.RetryRegistry;
 
 public class Application {
@@ -33,7 +38,14 @@ public class Application {
         
         CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker(SERVICE_NAME);
         RateLimiter rateLimiter = rateLimiterRegistry.rateLimiter(SERVICE_NAME);
+        
+        RetryConfig retryConfig = RetryConfig.custom()
+        .maxAttempts(5)
+        .waitDuration(Duration.ofSeconds(30))
+        .build();
+        
         Retry retry = retryRegistry.retry(SERVICE_NAME);
+        retryRegistry.addConfiguration(SERVICE_NAME, retryConfig);
         Bulkhead bulkhead = bulkheadRegistry.bulkhead(SERVICE_NAME);
                         
         FeignDecorators decorators = FeignDecorators.builder()
@@ -44,9 +56,20 @@ public class Application {
                 .withFallbackFactory(MyServiceClientFallback::new)
                 .build();
         
-        MyServiceClient client2 = Resilience4jFeign.builder(decorators).decoder(new JacksonDecoder()).target(MyServiceClient.class, "http://localhost:8080/");
+        MyServiceClient client2 = Resilience4jFeign.builder(decorators)
+        		.decoder(new JacksonDecoder())
+        		.encoder(new JacksonEncoder())
+        		.target(MyServiceClient.class, "http://localhost:8080/");
         
+        ClienteRequest request = new ClienteRequest();
         
+        request.setNome("Fulano");
+        request.setSobrenome("da Silva");
+        request.setEmail("fulano.silva@gmail.com");
+        request.setSexo(SexoEnum.MASCULINO);
+        request.setDatanascimento("18/12/1974");
+        
+        client2.postData("application/json", "application/json", request);
         List<ClienteResponse> data = client2.getData();
         System.out.println(data);
     }
