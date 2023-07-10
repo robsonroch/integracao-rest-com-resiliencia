@@ -14,5 +14,5 @@ public interface MyServiceClient {
     
     @RequestLine("POST /clientes")
     @Headers({"Content-Type: {contentType}", "Accept: {accept}"})
-    String postData(@Param("contentType") String contentType, @Param("accept") String accept, ClienteRequest requestObject);
+    ClienteResponse postData(@Param("contentType") String contentType, @Param("accept") String accept, ClienteRequest requestObject);
 }

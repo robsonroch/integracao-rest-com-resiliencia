@@ -4,9 +4,12 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
 
+import com.google.maps.model.AddressComponent;
+
 import br.com.robson.app.model.ClienteRequest;
 import br.com.robson.app.model.ClienteResponse;
 import br.com.robson.app.model.SexoEnum;
+import br.com.robson.app.util.GoogleMapsClient;
 import br.com.robson.app.util.MyServiceClient;
 import br.com.robson.app.util.MyServiceClientFallback;
 import feign.jackson.JacksonDecoder;
@@ -29,6 +32,8 @@ public class Application {
 	
     public static void main(String[] args) {
     	
+    	AddressComponent buscarEnderecoPorLatLon = GoogleMapsClient.buscarEnderecoPorLatLon(-22.890865, -43.547894);
+    	
     	
         CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
         RateLimiterRegistry rateLimiterRegistry = RateLimiterRegistry.ofDefaults();
@@ -41,7 +46,7 @@ public class Application {
         
         RetryConfig retryConfig = RetryConfig.custom()
         .maxAttempts(5)
-        .waitDuration(Duration.ofSeconds(30))
+        .waitDuration(Duration.ofSeconds(120))
         .build();
         
         Retry retry = retryRegistry.retry(SERVICE_NAME);
@@ -63,13 +68,13 @@ public class Application {
         
         ClienteRequest request = new ClienteRequest();
         
-        request.setNome("Fulano");
-        request.setSobrenome("da Silva");
-        request.setEmail("fulano.silva@gmail.com");
+        request.setNome("Beltrano");
+        request.setSobrenome("da Costa");
+        request.setEmail("Beltrano.silva@gmail.com");
         request.setSexo(SexoEnum.MASCULINO);
-        request.setDatanascimento("18/12/1974");
+        request.setDatanascimento("11/01/1990");
         
-        client2.postData("application/json", "application/json", request);
+        ClienteResponse postData = client2.postData("application/json", "application/json", request);
         List<ClienteResponse> data = client2.getData();
         System.out.println(data);
     }

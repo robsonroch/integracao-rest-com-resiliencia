@@ -22,7 +22,7 @@ public class MyServiceClientFallback implements MyServiceClient {
 	}
 
 	@Override
-	public String postData(String contentType, String accept, ClienteRequest requestObject) {
+	public ClienteResponse postData(String contentType, String accept, ClienteRequest requestObject) {
         if (cause != null) {
             System.out.println(cause.getMessage());
         }
